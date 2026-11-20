@@ -1,13 +1,15 @@
 const crypto = require("crypto");
 
-const DB_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-const DB_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+const DB_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || process.env.REDIS_URL;
+const DB_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || "";
 
 async function call(path, body) {
   if (!DB_URL || !DB_TOKEN) throw new Error("DB_NOT_CONFIGURED");
+  const headers = { "Content-Type": "application/json" };
+  if (DB_TOKEN) headers.Authorization = "Bearer " + DB_TOKEN;
   const r = await fetch(DB_URL + path, {
     method: "POST",
-    headers: { Authorization: "Bearer " + DB_TOKEN, "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   });
   return r.json();
@@ -59,7 +61,7 @@ async function limit(key, max, windowSec) {
 function normPhone(s) {
   s = String(s || "")
     .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
-    .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+    .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷٨۹".indexOf(d))
     .replace(/[^\d+]/g, "");
   if (s.startsWith("+964")) s = "0" + s.slice(4);
   else if (s.startsWith("964")) s = "0" + s.slice(3);
